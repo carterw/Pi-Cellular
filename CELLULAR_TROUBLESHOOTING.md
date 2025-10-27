@@ -175,7 +175,7 @@ $ ping -I wwan0 8.8.8.8
 cat /etc/resolv.conf
 ```
 
-Should show:
+Should show something like:
 
 ```
 nameserver 172.26.38.2
@@ -188,7 +188,7 @@ nameserver fc00:a:a::400
 # Get DNS from modem
 sudo mmcli -b 1 | grep dns
 
-# Manually set DNS
+# Manually set DNS to the address that was shown, like;
 echo "nameserver 172.26.38.2" | sudo tee /etc/resolv.conf
 echo "nameserver fc00:a:a::400" | sudo tee -a /etc/resolv.conf
 
