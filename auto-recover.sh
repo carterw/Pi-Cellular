@@ -9,10 +9,11 @@
 #        Default interval: 30 seconds
 #
 # To run as daemon:
-# sudo nohup ~/speedcam/cellular/auto-recover.sh 30 > ~/speedcam/cellular/auto-recover.log 2>&1 &
+# export CELLULAR_LOG_DIR=/var/log/cellular
+# sudo -E nohup /opt/cellular/auto-recover.sh 30 &
 #
 # To monitor the log:
-# tail -f ~/speedcam/cellular/auto-recover.log
+# tail -f /var/log/cellular/auto-recover.log
 #
 # To stop daemon:
 # sudo pkill -f auto-recover.sh

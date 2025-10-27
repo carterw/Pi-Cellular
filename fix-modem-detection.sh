@@ -155,7 +155,7 @@ log_section "MODEM DETECTION FIXED"
 log_info "Modem is now detected and ready"
 log_info ""
 log_info "Next steps:"
-log_info "  1. Run: sudo ~/speedcam/cellular/connect-cellular-dynamic.sh"
-log_info "  2. Or run: sudo ~/speedcam/cellular/cellular-debug.sh status"
+log_info "  1. Run: sudo /opt/cellular/connect-cellular-dynamic.sh"
+log_info "  2. Or run: sudo /opt/cellular/cellular-debug.sh status"
 
 exit 0

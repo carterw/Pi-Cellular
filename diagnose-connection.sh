@@ -191,7 +191,7 @@ if [[ $TEMP -gt 50 ]]; then
 fi
 
 log_info "3. MONITORING: Run continuous monitor"
-log_info "   sudo python3 ~/speedcam/cellular/monitor-cellular.py --duration 120"
+log_info "   tail -f /var/log/cellular/auto-recover.log"
 
 log_info "4. LOGS: Check ModemManager logs"
 log_info "   sudo journalctl -u ModemManager -f"
