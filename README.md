@@ -1,6 +1,6 @@
 # Pi-Cellular: Reliable Cellular Modem Solution for Raspberry Pi
 
-I was wanting to set up a Raspberry Pi to connect to the internet using a cellular modem. I found some information about it online and had partial success,but none of it worked very well. It turns out that the easiest way to implement this is to use the built-in ModemManager on the Pi and a few scripts to handle the connection bringup. In the old days (like last year) I would have written these scripts by hand but I don't bother with that anymore. 95% of the code and documentation here was generated for me by AI as the result of a few hours of investigative prompts.
+I was wanting to set up a Raspberry Pi to connect to the internet using a cellular modem. I found some information about it online and had partial success, but none of it worked very well. It turns out that the easiest way to implement this is to use the built-in ModemManager on the Pi and a few scripts to handle the connection bringup. In the old days (like last year) I would have written these scripts by hand but I don't bother with that anymore. 95% of the code and documentation here was generated for me by AI as the result of a few hours of investigative prompts.
 
 I'm using the Waveshare SIMCOM SIM7600G-H HAT. Yes they are expensive. The device is also available as a USB dongle which might be less hassle to work with, I haven't tried it.
 
