@@ -11,6 +11,7 @@ error: couldn't find modem
 ```
 
 **Causes**:
+
 1. ModemManager crashed or lost connection to modem
 2. USB connection interrupted
 3. Modem firmware issue
@@ -27,6 +28,7 @@ sudo /opt/cellular/reset-modem.sh
 ```
 
 This script will:
+
 - Stop ModemManager
 - Rescan USB bus
 - Restart ModemManager
@@ -103,6 +105,7 @@ sudo mmcli -m 0
 ```
 
 Look for:
+
 - `State: registered` (good)
 - `State: searching` (bad - not finding network)
 - `State: denied` (bad - SIM issue)
@@ -145,6 +148,7 @@ $ ping -I wwan0 8.8.8.8
 ```
 
 **Causes**:
+
 1. DNS not configured in `/etc/resolv.conf`
 2. IPv6 DNS missing (if using IPv6)
 3. DNS servers unreachable
@@ -197,6 +201,7 @@ sudo systemctl disable systemd-resolved
 - Cannot reconnect without manual intervention
 
 **Causes**:
+
 1. Carrier timeout
 2. Modem power management
 3. USB autosuspend
@@ -220,6 +225,7 @@ tail -f /var/log/cellular/auto-recover.log
 ```
 
 The daemon will:
+
 - Check connection every 30 seconds
 - Detect connection loss automatically
 - Reconfigure routes and DNS if needed
@@ -277,11 +283,13 @@ sudo -E nohup /opt/cellular/auto-recover.sh 30 &
 ### Issue 5: Slow or Intermittent Connection
 
 **Symptoms**:
+
 - High latency (>200ms)
 - Packet loss
 - Intermittent disconnections
 
 **Causes**:
+
 1. Poor signal strength
 2. Network congestion
 3. Modem thermal issues
@@ -295,6 +303,7 @@ sudo /opt/cellular/cellular-debug.sh signal
 ```
 
 Signal quality should be > -100 dBm. If worse:
+
 - Move antenna
 - Check antenna connection
 - Try different location

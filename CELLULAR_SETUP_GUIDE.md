@@ -120,6 +120,7 @@ sudo /opt/cellular/connect-cellular-dynamic.sh
 ```
 
 ### Expected Output
+
 ```
 [INFO] Starting cellular connection setup...
 [INFO] Step 1: Enabling modem 0...
@@ -349,27 +350,32 @@ Then start auto-recovery daemon to prevent future drops
 ## Monitoring the Connection
 
 ### Check modem status
+
 ```bash
 mmcli -m 0
 ```
 
 ### Check bearer status
+
 ```bash
 mmcli -b 1
 ```
 
 ### Check interface configuration
+
 ```bash
 ip addr show wwan0
 ip route show dev wwan0
 ```
 
 ### Monitor in real-time
+
 ```bash
 mmcli -m 0 -w
 ```
 
 ### Test connectivity
+
 ```bash
 ping -I wwan0 8.8.8.8
 curl --interface wwan0 https://httpbin.org/ip
@@ -399,11 +405,13 @@ curl --interface wwan0 https://httpbin.org/ip
 ### IP Address Format
 
 The carrier assigns addresses using CIDR notation:
+
 - **Address**: 10.19.145.184 (your device's IP)
 - **Prefix**: 28 (network mask, /28 = 255.255.255.240)
 - **Gateway**: 10.19.145.185 (carrier's gateway for this connection)
 
 The `/28` prefix means:
+
 - Network: 10.19.145.176/28
 - Usable IPs: 10.19.145.177 - 10.19.145.190
 - Broadcast: 10.19.145.191
@@ -411,6 +419,7 @@ The `/28` prefix means:
 ### MTU Configuration
 
 The MTU (Maximum Transmission Unit) of 1430 is typical for cellular:
+
 - Standard Ethernet: 1500 bytes
 - Cellular (with overhead): 1430 bytes
 - Setting correct MTU prevents packet fragmentation
@@ -418,6 +427,7 @@ The MTU (Maximum Transmission Unit) of 1430 is typical for cellular:
 ### DNS Configuration
 
 The carrier provides DNS servers (172.26.38.2):
+
 - These are the carrier's DNS resolvers
 - May be different from public DNS (8.8.8.8)
 - Script uses carrier's DNS for reliability
@@ -431,7 +441,7 @@ The carrier provides DNS servers (172.26.38.2):
 1. **Test the robust script**:
 
    ```bash
-   sudo ~/speedcam/cellular/connect-cellular-robust.sh
+   sudo /opt/cellular/connect-cellular-robust.sh
    ```
 
 2. **Verify connectivity**:
@@ -444,7 +454,8 @@ The carrier provides DNS servers (172.26.38.2):
 3. **Start auto-recovery daemon**:
 
    ```bash
-   sudo nohup ~/speedcam/cellular/auto-recover.sh 30 > ~/speedcam/cellular/auto-recover.log 2>&1 &
+   export CELLULAR_LOG_DIR=/var/log/cellular
+   sudo -E nohup /opt/cellular/auto-recover.sh 30 &
    ```
 
 4. **Reboot and verify it still works**:
@@ -454,7 +465,7 @@ The carrier provides DNS servers (172.26.38.2):
    # After reboot, check:
    ip addr show wwan0
    mmcli -m 0
-   tail -f ~/speedcam/cellular/auto-recover.log
+   tail -f /var/log/cellular/auto-recover.log
    ```
 
 5. **Set up automatic startup** using systemd services (recommended)
@@ -471,7 +482,7 @@ The carrier provides DNS servers (172.26.38.2):
 1. **Test the dynamic script** for detailed inspection:
 
    ```bash
-   sudo ~/speedcam/cellular/connect-cellular-dynamic.sh
+   sudo /opt/cellular/connect-cellular-dynamic.sh
    ```
 
 2. **Check modem status**:
@@ -490,8 +501,8 @@ The carrier provides DNS servers (172.26.38.2):
 4. **Use debug script** for comprehensive diagnostics:
 
    ```bash
-   sudo ~/speedcam/cellular/cellular-debug.sh status
-   sudo ~/speedcam/cellular/cellular-debug.sh test
+   sudo /opt/cellular/cellular-debug.sh status
+   sudo /opt/cellular/cellular-debug.sh test
    ```
 
 ---

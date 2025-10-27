@@ -19,8 +19,8 @@ Five scripts work together to manage and debug your SIMCOM SIM7600G-H cellular m
 From your local machine:
 
 ```bash
-cd /home/bill/speedcam
-chmod +x cellular-remote-deploy.sh
+cd Pi-Cellular
+chmod +x *.sh
 ./cellular-remote-deploy.sh pi@192.168.1.100
 ```
 
@@ -35,29 +35,30 @@ ssh pi@192.168.1.100
 ### Step 3: Check Modem Status
 
 ```bash
-sudo ~/speedcam/cellular/cellular-debug.sh status
+sudo /opt/cellular/cellular-debug.sh status
 ```
 
 ### Step 4: Connect the Modem
 
 ```bash
 # Recommended: Use robust script for production
-sudo ~/speedcam/cellular/connect-cellular-robust.sh
+sudo /opt/cellular/connect-cellular-robust.sh
 
 # Alternative: Use dynamic script for manual configuration inspection
-sudo ~/speedcam/cellular/connect-cellular-dynamic.sh
+sudo /opt/cellular/connect-cellular-dynamic.sh
 ```
 
 ### Step 5: Start Auto-Recovery Daemon (Optional but Recommended)
 
 ```bash
-sudo nohup ~/speedcam/cellular/auto-recover.sh 30 > ~/speedcam/cellular/auto-recover.log 2>&1 &
+export CELLULAR_LOG_DIR=/var/log/cellular
+sudo -E nohup /opt/cellular/auto-recover.sh 30 &
 ```
 
 ### Step 6: Verify Connectivity
 
 ```bash
-sudo ~/speedcam/cellular/cellular-debug.sh test
+sudo /opt/cellular/cellular-debug.sh test
 ```
 
 ---
@@ -81,7 +82,7 @@ sudo ~/speedcam/cellular/cellular-debug.sh test
 
 **Usage**:
 ```bash
-sudo ~/speedcam/cellular/connect-cellular-robust.sh
+sudo /opt/cellular/connect-cellular-robust.sh
 ```
 
 **When to use**:
@@ -108,7 +109,7 @@ sudo ~/speedcam/cellular/connect-cellular-robust.sh
 
 **Usage**:
 ```bash
-sudo ~/speedcam/cellular/connect-cellular-dynamic.sh
+sudo /opt/cellular/connect-cellular-dynamic.sh
 ```
 
 **Output Example**:
@@ -130,11 +131,13 @@ MTU: 1430
 ```
 
 **Troubleshooting**:
+
 - If it fails, check modem status first: `sudo cellular-debug.sh status`
 - If "Failed to retrieve IP configuration", increase sleep time in script
 - If connectivity test fails, check carrier restrictions with `cellular-debug.sh test`
 
 **When to use**:
+
 - Troubleshooting and detailed inspection of configuration
 - When you want to see exact IP addresses extracted from modem
 - For understanding network configuration details
@@ -157,10 +160,11 @@ MTU: 1430
 **Usage**:
 ```bash
 # Start daemon with 30-second interval
-sudo nohup ~/speedcam/cellular/auto-recover.sh 30 > ~/speedcam/cellular/auto-recover.log 2>&1 &
+export CELLULAR_LOG_DIR=/var/log/cellular
+sudo -E nohup /opt/cellular/auto-recover.sh 30 &
 
 # Monitor daemon output
-tail -f ~/speedcam/cellular/auto-recover.log
+tail -f /var/log/cellular/auto-recover.log
 
 # Stop daemon
 sudo pkill -f auto-recover.sh
@@ -196,12 +200,13 @@ sudo pkill -f auto-recover.sh
 **Usage**:
 ```bash
 # Standalone usage
-sudo ~/speedcam/cellular/setup-dns-routes.sh
+sudo /opt/cellular/setup-dns-routes.sh
 
 # Called automatically by connect-cellular-robust.sh
 ```
 
 **When to use**:
+
 - Called automatically by `connect-cellular-robust.sh`
 - Manual reconfiguration of routes/DNS if needed
 - Troubleshooting DNS or routing issues
@@ -215,16 +220,19 @@ sudo ~/speedcam/cellular/setup-dns-routes.sh
 **Commands**:
 
 #### `status` - Show current state
+
 ```bash
-sudo ~/speedcam/cellular-debug.sh status
+sudo /opt/cellular/cellular-debug.sh status
 ```
 Shows modem details, bearer status, interface configuration, and routes.
 
 #### `test` - Run connectivity tests
+
 ```bash
-sudo ~/speedcam/cellular-debug.sh test
+sudo /opt/cellular/cellular-debug.sh test
 ```
 Tests:
+
 - IPv4 address assignment
 - Default route configuration
 - DNS resolution
@@ -232,50 +240,58 @@ Tests:
 - HTTP connectivity
 
 #### `signal` - Check signal strength
+
 ```bash
-sudo ~/speedcam/cellular-debug.sh signal
+sudo /opt/cellular/cellular-debug.sh signal
 ```
 Shows signal quality and detailed signal statistics.
 
 #### `sim` - Check SIM card status
+
 ```bash
-sudo ~/speedcam/cellular-debug.sh sim
+sudo /opt/cellular/cellular-debug.sh sim
 ```
 Shows SIM information and PIN status.
 
 #### `network` - Show network information
+
 ```bash
-sudo ~/speedcam/cellular-debug.sh network
+sudo /opt/cellular/cellular-debug.sh network
 ```
 Shows registered network and available networks.
 
 #### `connect` - Manual connection
+
 ```bash
-sudo ~/speedcam/cellular-debug.sh connect
+sudo /opt/cellular/cellular-debug.sh connect
 ```
 Manually connect modem (useful for testing).
 
 #### `disconnect` - Disconnect modem
+
 ```bash
-sudo ~/speedcam/cellular-debug.sh disconnect
+sudo /opt/cellular/cellular-debug.sh disconnect
 ```
 Safely disconnect the modem.
 
 #### `reset` - Reset modem
+
 ```bash
-sudo ~/speedcam/cellular-debug.sh reset
+sudo /opt/cellular/cellular-debug.sh reset
 ```
 Perform a full modem reset (disconnect and reconnect).
 
 #### `logs` - View system logs
+
 ```bash
-sudo ~/speedcam/cellular-debug.sh logs
+sudo /opt/cellular/cellular-debug.sh logs
 ```
 Shows recent ModemManager and cellular connection logs.
 
 #### `help` - Show help
+
 ```bash
-sudo ~/speedcam/cellular-debug.sh help
+sudo /opt/cellular/cellular-debug.sh help
 ```
 
 ---
@@ -292,11 +308,12 @@ sudo ~/speedcam/cellular-debug.sh help
 **Examples**:
 ```bash
 ./cellular-remote-deploy.sh pi@192.168.1.100
-./cellular-remote-deploy.sh pi@speedcam.local
+./cellular-remote-deploy.sh pi@192.168.1.50
 ./cellular-remote-deploy.sh pi@10.19.145.184
 ```
 
 **What it does**:
+
 1. Tests SSH connection to remote Pi
 2. Creates remote directory
 3. Copies all scripts and documentation
@@ -304,6 +321,7 @@ sudo ~/speedcam/cellular-debug.sh help
 5. Verifies deployment
 
 **Requirements**:
+
 - SSH access to remote Pi
 - `scp` command available (usually included with SSH)
 - Remote user has sudo access
@@ -319,16 +337,17 @@ sudo ~/speedcam/cellular-debug.sh help
 ssh pi@192.168.1.100
 
 # Check modem status
-sudo ~/speedcam/cellular/cellular-debug.sh status
+sudo /opt/cellular/cellular-debug.sh status
 
 # Connect using robust script
-sudo ~/speedcam/cellular/connect-cellular-robust.sh
+sudo /opt/cellular/connect-cellular-robust.sh
 
 # Verify connectivity
-sudo ~/speedcam/cellular/cellular-debug.sh test
+sudo /opt/cellular/cellular-debug.sh test
 
 # Start auto-recovery daemon (recommended)
-sudo nohup ~/speedcam/cellular/auto-recover.sh 30 > ~/speedcam/cellular/auto-recover.log 2>&1 &
+export CELLULAR_LOG_DIR=/var/log/cellular
+sudo -E nohup /opt/cellular/auto-recover.sh 30 &
 ```
 
 ### First-Time Setup (Troubleshooting)
@@ -338,13 +357,13 @@ sudo nohup ~/speedcam/cellular/auto-recover.sh 30 > ~/speedcam/cellular/auto-rec
 ssh pi@192.168.1.100
 
 # Check modem status
-sudo ~/speedcam/cellular/cellular-debug.sh status
+sudo /opt/cellular/cellular-debug.sh status
 
 # Connect using dynamic script for detailed inspection
-sudo ~/speedcam/cellular/connect-cellular-dynamic.sh
+sudo /opt/cellular/connect-cellular-dynamic.sh
 
 # Verify connectivity
-sudo ~/speedcam/cellular/cellular-debug.sh test
+sudo /opt/cellular/cellular-debug.sh test
 ```
 
 ### Daily Use
@@ -354,20 +373,20 @@ sudo ~/speedcam/cellular/cellular-debug.sh test
 ssh pi@192.168.1.100
 
 # Check status
-sudo ~/speedcam/cellular/cellular-debug.sh status
+sudo /opt/cellular/cellular-debug.sh status
 
 # If disconnected, reconnect (auto-recover daemon should handle this)
-sudo ~/speedcam/cellular/connect-cellular-robust.sh
+sudo /opt/cellular/connect-cellular-robust.sh
 
 # Verify connectivity
-sudo ~/speedcam/cellular/cellular-debug.sh test
+sudo /opt/cellular/cellular-debug.sh test
 ```
 
 ### Monitoring Auto-Recovery Daemon
 
 ```bash
 # Monitor daemon logs
-tail -f ~/speedcam/cellular/auto-recover.log
+tail -f /var/log/cellular/auto-recover.log
 
 # Check if daemon is running
 ps aux | grep auto-recover.sh
@@ -380,22 +399,22 @@ sudo pkill -f auto-recover.sh
 
 ```bash
 # Check signal strength
-sudo ~/speedcam/cellular/cellular-debug.sh signal
+sudo /opt/cellular/cellular-debug.sh signal
 
 # Check SIM status
-sudo ~/speedcam/cellular/cellular-debug.sh sim
+sudo /opt/cellular/cellular-debug.sh sim
 
 # View recent logs
-sudo ~/speedcam/cellular/cellular-debug.sh logs
+sudo /opt/cellular/cellular-debug.sh logs
 
 # Reset modem
-sudo ~/speedcam/cellular/cellular-debug.sh reset
+sudo /opt/cellular/cellular-debug.sh reset
 
 # Manual connectivity test
-sudo ~/speedcam/cellular/cellular-debug.sh test
+sudo /opt/cellular/cellular-debug.sh test
 
 # Emergency modem reset (if stuck)
-sudo bash ~/speedcam/cellular/reset-modem.sh
+sudo bash /opt/cellular/reset-modem.sh
 ```
 
 ---
@@ -414,7 +433,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/home/pi/speedcam/cellular/connect-cellular-robust.sh
+ExecStart=/opt/cellular/connect-cellular-robust.sh
 RemainAfterExit=yes
 StandardOutput=journal
 StandardError=journal
@@ -433,7 +452,8 @@ Wants=cellular-connect.service
 
 [Service]
 Type=simple
-ExecStart=/bin/bash -c 'exec /home/pi/speedcam/cellular/auto-recover.sh 30'
+ExecStart=/bin/bash -c 'exec /opt/cellular/auto-recover.sh 30'
+Environment="CELLULAR_LOG_DIR=/var/log/cellular"
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -463,9 +483,9 @@ sudo journalctl -u cellular-auto-recover.service -f
 Add to `/etc/rc.local` before `exit 0`:
 
 ```bash
-/home/pi/speedcam/cellular/connect-cellular-robust.sh >> /var/log/cellular-connect.log 2>&1 &
+/opt/cellular/connect-cellular-robust.sh >> /var/log/cellular-connect.log 2>&1 &
 sleep 5
-nohup /home/pi/speedcam/cellular/auto-recover.sh 30 >> /var/log/cellular-auto-recover.log 2>&1 &
+nohup /opt/cellular/auto-recover.sh 30 >> /var/log/cellular-auto-recover.log 2>&1 &
 ```
 
 ---
@@ -475,6 +495,7 @@ nohup /home/pi/speedcam/cellular/auto-recover.sh 30 >> /var/log/cellular-auto-re
 ### Issue: "Cannot connect to host via SSH"
 
 **Solution**:
+
 1. Verify Pi is on network: `ping 192.168.1.100`
 2. Check SSH is enabled: `sudo systemctl status ssh`
 3. Verify username: try `ssh pi@...` or `ssh ubuntu@...`
@@ -483,6 +504,7 @@ nohup /home/pi/speedcam/cellular/auto-recover.sh 30 >> /var/log/cellular-auto-re
 ### Issue: "Failed to retrieve IP configuration"
 
 **Solution**:
+
 1. Check modem is connected: `sudo cellular-debug.sh status`
 2. Increase sleep time in script (modem may be slow to connect)
 3. Check bearer is connected: `mmcli -b 1`
@@ -490,6 +512,7 @@ nohup /home/pi/speedcam/cellular/auto-recover.sh 30 >> /var/log/cellular-auto-re
 ### Issue: "Cannot reach 8.8.8.8"
 
 **Solution**:
+
 1. This is often normal for cellular carriers (they may block external traffic)
 2. Test with your actual server instead
 3. Check DNS resolution: `nslookup google.com`
@@ -505,6 +528,7 @@ sudo systemctl enable ModemManager
 ### Issue: "wwan0 interface not found"
 
 **Solution**:
+
 1. Check modem is enabled: `mmcli -m 0`
 2. Check bearer is created: `mmcli -b 1`
 3. Restart ModemManager: `sudo systemctl restart ModemManager`
@@ -534,7 +558,7 @@ sudo journalctl -u cellular-connect.service -f
 crontab -e
 
 # Add this line:
-*/5 * * * * /home/pi/speedcam/cellular-debug.sh test >> /tmp/cellular-test.log 2>&1
+*/5 * * * * /opt/cellular/cellular-debug.sh test >> /tmp/cellular-test.log 2>&1
 ```
 
 ---
@@ -544,7 +568,7 @@ crontab -e
 After deployment, scripts are located at:
 
 ```
-/home/pi/speedcam/cellular/
+/opt/cellular/
 ├── connect-cellular-robust.sh       # Production connection script (recommended)
 ├── connect-cellular-dynamic.sh      # Alternative connection script
 ├── auto-recover.sh                  # Continuous monitoring daemon
@@ -562,7 +586,7 @@ For detailed technical information, see `CELLULAR_SETUP_GUIDE.md`.
 
 For quick help on any script:
 ```bash
-sudo ~/speedcam/cellular-debug.sh help
+sudo /opt/cellular/cellular-debug.sh help
 ```
 
 ---
@@ -584,11 +608,13 @@ sudo ~/speedcam/cellular-debug.sh help
 ## Recommended Setup
 
 **For Production Deployments:**
+
 1. Use `connect-cellular-robust.sh` for initial connection
 2. Run `auto-recover.sh` daemon for continuous monitoring
 3. Set up systemd services for automatic startup
 
 **For Troubleshooting:**
+
 1. Use `connect-cellular-dynamic.sh` to see detailed configuration
 2. Use `cellular-debug.sh` for diagnostics
 3. Check logs with `journalctl` or tail auto-recover.log
@@ -598,8 +624,8 @@ sudo ~/speedcam/cellular-debug.sh help
 ## Next Steps
 
 1. SSH to Pi: `ssh pi@<ip>`
-2. Check status: `sudo ~/speedcam/cellular/cellular-debug.sh status`
-3. Connect: `sudo ~/speedcam/cellular/connect-cellular-robust.sh`
-4. Test: `sudo ~/speedcam/cellular/cellular-debug.sh test`
-5. Start daemon: `sudo nohup ~/speedcam/cellular/auto-recover.sh 30 > ~/speedcam/cellular/auto-recover.log 2>&1 &`
+2. Check status: `sudo /opt/cellular/cellular-debug.sh status`
+3. Connect: `sudo /opt/cellular/connect-cellular-robust.sh`
+4. Test: `sudo /opt/cellular/cellular-debug.sh test`
+5. Start daemon: `export CELLULAR_LOG_DIR=/var/log/cellular && sudo -E nohup /opt/cellular/auto-recover.sh 30 &`
 6. Set up automation (optional): Create systemd services
