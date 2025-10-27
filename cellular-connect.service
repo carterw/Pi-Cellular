@@ -5,6 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+ExecStartPre=/bin/bash -c 'mmcli -L 2>/dev/null | grep -q "Modem/" || (echo "No modem found" && exit 1)'
 ExecStart=/opt/cellular/connect-cellular-robust.sh
 RemainAfterExit=yes
 StandardOutput=journal
