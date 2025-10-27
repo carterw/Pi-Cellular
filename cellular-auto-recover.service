@@ -5,6 +5,7 @@ Wants=cellular-connect.service
 
 [Service]
 Type=simple
+ExecStartPre=/bin/bash -c 'mmcli -L 2>/dev/null | grep -q "Modem/" || (echo "No modem found" && exit 1)'
 ExecStart=/bin/bash -c 'exec /opt/cellular/auto-recover.sh 30'
 Environment="CELLULAR_LOG_DIR=/var/log/cellular"
 Restart=always

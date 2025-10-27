@@ -80,6 +80,16 @@ log_info "Log file: $LOG_FILE"
 log_info "PID: $$"
 echo ""
 
+# Check if modem is available at startup
+log_info "Checking for modem..."
+if ! mmcli -L 2>/dev/null | grep -q "Modem/"; then
+    log_error "No modem found. Exiting."
+    log_error "Please ensure modem is connected and ModemManager is running."
+    exit 1
+fi
+log_info "✓ Modem detected"
+echo ""
+
 # Get modem and bearer IDs
 get_ids() {
     MODEM_ID=$(mmcli -L 2>/dev/null | grep -oP 'Modem/\K[0-9]+' | head -1)
