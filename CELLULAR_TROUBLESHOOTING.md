@@ -5,6 +5,7 @@
 ### Issue 1: "couldn't find modem" Error
 
 **Symptoms**:
+
 ```bash
 $ sudo mmcli -m 0
 error: couldn't find modem
@@ -46,23 +47,27 @@ sudo /opt/cellular/connect-cellular-robust.sh
 #### Manual Recovery Steps
 
 **Step 1: Check if modem is on USB**
+
 ```bash
-lsusb | grep -i simcom
+lsusb | grep -i "SimTech"
 ```
 
-If you see output like `Bus 001 Device 003: ID 1e0e:9001 Qualcomm SIMCOM_SIM7600G-H`, the modem is detected by the system.
+If you see output like `Bus 003 Device 003: ID 1e0e:9001 Qualcomm / Option SimTech`, the modem is detected by the system.
 
 **Step 2: Check if ModemManager is running**
+
 ```bash
 sudo systemctl status ModemManager
 ```
 
 If not running, start it:
+
 ```bash
 sudo systemctl start ModemManager
 ```
 
 **Step 3: Restart ModemManager**
+
 ```bash
 sudo systemctl restart ModemManager
 sleep 3
@@ -70,6 +75,7 @@ mmcli -L
 ```
 
 **Step 4: Check serial devices**
+
 ```bash
 ls -la /dev/ttyUSB*
 ```
@@ -77,6 +83,7 @@ ls -la /dev/ttyUSB*
 You should see `/dev/ttyUSB0`, `/dev/ttyUSB1`, `/dev/ttyUSB2`, etc.
 
 **Step 5: Manual USB reset (Last Resort)**
+
 ```bash
 # Unplug USB cable
 # Wait 10 seconds
@@ -92,6 +99,7 @@ mmcli -L
 ### Issue 2: Modem Detected but Cannot Connect
 
 **Symptoms**:
+
 ```bash
 $ mmcli -m 0
 # Shows modem but connection fails
@@ -100,6 +108,7 @@ $ mmcli -m 0
 **Solutions**:
 
 **Check modem status**:
+
 ```bash
 sudo mmcli -m 0
 ```
@@ -111,6 +120,7 @@ Look for:
 - `State: denied` (bad - SIM issue)
 
 **Check SIM card**:
+
 ```bash
 sudo mmcli -m 0 --command='AT+CPIN?'
 ```
@@ -118,6 +128,7 @@ sudo mmcli -m 0 --command='AT+CPIN?'
 Should return `+CPIN: READY`
 
 **Check network registration**:
+
 ```bash
 sudo mmcli -m 0 --command='AT+COPS?'
 ```
@@ -125,6 +136,7 @@ sudo mmcli -m 0 --command='AT+COPS?'
 Should show registered network like `+COPS: 0,0,"Dark Star",7`
 
 **Check signal strength**:
+
 ```bash
 sudo mmcli -m 0 | grep -i signal
 ```
@@ -136,12 +148,14 @@ Signal should be > -100 dBm
 ### Issue 3: DNS Resolution Fails
 
 **Symptoms**:
+
 ```bash
 $ ping -I wwan0 www.google.com
 ping: www.google.com: Temporary failure in name resolution
 ```
 
 But IP-based ping works:
+
 ```bash
 $ ping -I wwan0 8.8.8.8
 # Works fine
@@ -156,17 +170,20 @@ $ ping -I wwan0 8.8.8.8
 **Solutions**:
 
 **Check DNS configuration**:
+
 ```bash
 cat /etc/resolv.conf
 ```
 
 Should show:
+
 ```
 nameserver 172.26.38.2
 nameserver fc00:a:a::400
 ```
 
 **Reconfigure DNS**:
+
 ```bash
 # Get DNS from modem
 sudo mmcli -b 1 | grep dns
@@ -180,11 +197,13 @@ nslookup google.com
 ```
 
 **Check if systemd-resolved is interfering**:
+
 ```bash
 sudo systemctl status systemd-resolved
 ```
 
 If it's running and causing issues:
+
 ```bash
 sudo systemctl stop systemd-resolved
 sudo systemctl disable systemd-resolved
@@ -309,6 +328,7 @@ Signal quality should be > -100 dBm. If worse:
 - Try different location
 
 **Monitor latency**:
+
 ```bash
 ping -I wwan0 -c 100 8.8.8.8 | tail -1
 ```
@@ -316,6 +336,7 @@ ping -I wwan0 -c 100 8.8.8.8 | tail -1
 Look at `min/avg/max/mdev` values. Average should be < 150ms.
 
 **Check packet loss**:
+
 ```bash
 ping -I wwan0 -c 100 8.8.8.8 | grep "packet loss"
 ```
@@ -323,6 +344,7 @@ ping -I wwan0 -c 100 8.8.8.8 | grep "packet loss"
 Should be 0% or very low (<5%).
 
 **Check modem temperature** (if available):
+
 ```bash
 sudo mmcli -m 0 --command='AT+CTEMP?'
 ```
@@ -472,6 +494,7 @@ tail -f /var/log/cellular/auto-recover.log
 If you've tried all troubleshooting steps and still have issues:
 
 1. Collect diagnostic info:
+
    ```bash
    sudo mmcli -m 0 > modem_info.txt
    sudo mmcli -b 1 >> modem_info.txt
