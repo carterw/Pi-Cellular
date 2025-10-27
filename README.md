@@ -8,7 +8,9 @@ I'm using the Waveshare SIMCOM SIM7600G-H HAT. Yes they are expensive. The devic
 
 <https://thepihut.com/products/sim7600g-h-4g-usb-dongle>
 
-One challenge with these devices is that you will need a SIM card that lets you connect to an appropriate cellular service. Ideally that service won't cost you an arm and a leg monthly. The service must also issue you an IPV4 address, and I've found that not all of them will do it. I'm using US Mobile which is a reseller for both AT&T and Verizon. They have some relatively inexpensive plans and they will send you two SIM cards, one for each carrier. I'm using the AT&T (Dark Star) card, their network has very good coverage in the USA. AT&T gives you a static IP address from a pool of addresses that is assigned to you dynamically. These scripts handle that, but other services may do things differently and break the scripts.
+One challenge with these devices is that you will need a SIM card that lets you connect to an appropriate cellular service. Ideally that service won't cost you an arm and a leg monthly, but all you want is data so you may find a cheap plan. The service must also allocate an IPV4 address for your device, and I've found that not all of them will do that.
+
+At the present time I'm using US Mobile which is a reseller for both AT&T and Verizon. They have some relatively inexpensive plans and they will send you two SIM cards, one for each carrier. I'm using the AT&T (Dark Star) card, their network has very good coverage in the USA. AT&T gives you a static IP address from a pool of addresses that is assigned to you dynamically. These scripts handle that, but other services may do things differently and break the scripts.
 
 The modem may lose connection to the cellular network at times, most likely due to weak signal. When that happens it will not reconnect automatically. The auto-recover.sh script will handle that for you in the background.
 
@@ -272,9 +274,6 @@ sudo journalctl -u ModemManager -f
 ```bash
 # Ping test
 ping -I wwan0 8.8.8.8
-
-# DNS resolution
-nslookup google.com
 
 # HTTP request
 curl --interface wwan0 https://httpbin.org/ip
