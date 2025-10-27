@@ -1,0 +1,16 @@
+[Unit]
+Description=Cellular Auto-Recovery Daemon
+After=cellular-connect.service
+Wants=cellular-connect.service
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c 'exec /opt/cellular/auto-recover.sh 30'
+Environment="CELLULAR_LOG_DIR=/var/log/cellular"
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

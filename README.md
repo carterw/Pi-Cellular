@@ -1,0 +1,408 @@
+# Pi-Cellular: Reliable Cellular Modem Solution for Raspberry Pi
+
+A production-ready cellular connection management system for Raspberry Pi with SIMCOM SIM7600G-H modem. Provides automatic connection establishment, recovery, and monitoring with zero manual intervention.
+
+## Features
+
+- **Automatic Modem Detection** - Works with any modem ID (0, 1, 2, etc.)
+- **Dynamic IP Handling** - Automatically configures IPs from carrier DHCP pools
+- **Auto-Recovery Daemon** - Detects and fixes connection drops automatically
+- **Robust Error Handling** - Comprehensive error recovery and diagnostics
+- **Production-Ready** - Systemd integration, logging, and monitoring
+- **Portable** - No hardwired paths; works in any installation directory
+
+## Quick Start
+
+### Prerequisites
+
+- Raspberry Pi 4 (or compatible)
+- SIMCOM SIM7600G-H modem (or similar)
+- Active cellular data plan
+- Linux system with:
+  - `ModemManager` and `mmcli`
+  - `systemd`
+  - Standard utilities (ip, route, dns)
+
+### Installation
+
+#### Option 1: Standard System Location (Recommended)
+
+```bash
+# Clone or download the repository
+git clone <repository-url> pi-cellular
+cd pi-cellular
+
+# Install to /opt/cellular
+sudo mkdir -p /opt/cellular
+sudo cp *.sh /opt/cellular/
+sudo chmod +x /opt/cellular/*.sh
+
+# Create log directory
+sudo mkdir -p /var/log/cellular
+sudo chown $USER:$USER /var/log/cellular
+
+# Verify installation
+ls -la /opt/cellular/
+```
+
+#### Option 2: User Home Directory
+
+```bash
+# Install to home directory
+mkdir -p ~/cellular
+cp *.sh ~/cellular/
+chmod +x ~/cellular/*.sh
+
+# Create log directory
+mkdir -p ~/cellular/logs
+export CELLULAR_LOG_DIR=~/cellular/logs
+```
+
+#### Option 3: Development (Current Directory)
+
+```bash
+# Make scripts executable
+chmod +x *.sh
+
+# Run directly from current directory
+sudo ./connect-cellular-robust.sh
+```
+
+### Basic Usage
+
+#### 1. Test Modem Connection
+
+```bash
+# Check if modem is detected
+sudo /opt/cellular/cellular-debug.sh status
+
+# Run comprehensive diagnostics
+sudo /opt/cellular/cellular-debug.sh test
+```
+
+#### 2. Connect the Modem
+
+```bash
+# Production use (recommended)
+sudo /opt/cellular/connect-cellular-robust.sh
+
+# Troubleshooting (detailed output)
+sudo /opt/cellular/connect-cellular-dynamic.sh
+```
+
+#### 3. Start Auto-Recovery Daemon
+
+```bash
+# Start daemon for automatic connection monitoring
+export CELLULAR_LOG_DIR=/var/log/cellular
+sudo -E nohup /opt/cellular/auto-recover.sh 30 &
+
+# Monitor daemon logs
+tail -f /var/log/cellular/auto-recover.log
+```
+
+## Project Structure
+
+```
+pi-cellular/
+├── README.md                          # This file
+├── DYNAMIC_PATHS_REFACTORING.md      # Path configuration guide
+├── CELLULAR_SETUP_GUIDE.md           # Detailed setup instructions
+├── CELLULAR_TROUBLESHOOTING.md       # Troubleshooting reference
+├── CELLULAR_SCRIPTS_README.md        # Script documentation
+├── MODEM_ID_GUIDE.md                 # Modem ID auto-detection
+│
+├── Systemd Services
+├── cellular-connect.service          # Boot-time connection service
+├── cellular-auto-recover.service     # Auto-recovery daemon service
+│
+├── Connection Scripts
+├── connect-cellular-robust.sh        # Production connection script
+├── connect-cellular-dynamic.sh       # Troubleshooting connection script
+├── auto-recover.sh                   # Auto-recovery daemon
+│
+├── Utility Scripts
+├── cellular-debug.sh                 # Diagnostics script
+├── cellular-recover.sh               # Emergency recovery script
+├── reset-modem.sh                    # Modem reset utility
+├── setup-dns-routes.sh               # Network configuration
+└── get-modem-id.sh                   # Modem ID detection utility
+```
+
+## Scripts Overview
+
+### Connection Scripts
+
+| Script | Purpose | Use Case |
+|--------|---------|----------|
+| `connect-cellular-robust.sh` | Establish cellular connection | Production use |
+| `connect-cellular-dynamic.sh` | Establish with detailed output | Troubleshooting |
+| `auto-recover.sh` | Monitor and auto-recover | High availability |
+
+### Utility Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `cellular-debug.sh` | Comprehensive diagnostics |
+| `cellular-recover.sh` | Emergency recovery |
+| `reset-modem.sh` | Full modem reset |
+| `setup-dns-routes.sh` | Network configuration |
+| `get-modem-id.sh` | Detect current modem ID |
+| `cellular-remote-deploy.sh` | Deploy to remote system |
+
+## Configuration
+
+### Environment Variables
+
+**CELLULAR_LOG_DIR** - Controls where `auto-recover.sh` writes logs
+
+**Default behavior:**
+1. If `CELLULAR_LOG_DIR` is set, use that directory
+2. If script directory is writable, use that directory
+3. Otherwise, use `/var/log/cellular`
+
+**Usage:**
+```bash
+# Use default location (script directory or /var/log/cellular)
+sudo ./auto-recover.sh 30
+
+# Custom log directory
+export CELLULAR_LOG_DIR=/var/log/cellular
+sudo -E nohup ./auto-recover.sh 30 &
+
+# Or in one command
+CELLULAR_LOG_DIR=/var/log/cellular sudo -E nohup ./auto-recover.sh 30 &
+```
+
+### Systemd Services
+
+Two systemd service files are provided in the repository:
+
+#### Automatic Connection at Boot
+
+See [`cellular-connect.service`](cellular-connect.service) for the service definition.
+
+Install:
+
+```bash
+sudo cp cellular-connect.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable cellular-connect.service
+sudo systemctl start cellular-connect.service
+```
+
+#### Auto-Recovery Daemon
+
+See [`cellular-auto-recover.service`](cellular-auto-recover.service) for the service definition.
+
+Install:
+
+```bash
+sudo cp cellular-auto-recover.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable cellular-auto-recover.service
+sudo systemctl start cellular-auto-recover.service
+```
+
+#### Enable Both Services
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable cellular-connect.service cellular-auto-recover.service
+sudo systemctl start cellular-connect.service cellular-auto-recover.service
+```
+
+## Monitoring
+
+### Check Connection Status
+
+```bash
+# Modem status
+sudo mmcli -m 0
+
+# Bearer status
+sudo mmcli -b 1
+
+# Interface configuration
+ip addr show wwan0
+ip route show dev wwan0
+
+# DNS configuration
+cat /etc/resolv.conf
+```
+
+### View Logs
+
+```bash
+# System logs
+sudo journalctl -u cellular-connect.service -f
+sudo journalctl -u cellular-auto-recover.service -f
+
+# Auto-recovery daemon logs
+tail -f /var/log/cellular/auto-recover.log
+
+# ModemManager logs
+sudo journalctl -u ModemManager -f
+```
+
+### Test Connectivity
+
+```bash
+# Ping test
+ping -I wwan0 8.8.8.8
+
+# DNS resolution
+nslookup google.com
+
+# HTTP request
+curl --interface wwan0 https://httpbin.org/ip
+```
+
+## Troubleshooting
+
+### Modem Not Detected
+
+```bash
+# Check if modem is on USB
+lsusb | grep -i simcom
+
+# Restart ModemManager
+sudo systemctl restart ModemManager
+sleep 3
+mmcli -L
+
+# Emergency reset
+sudo /opt/cellular/reset-modem.sh
+```
+
+### Connection Fails
+
+```bash
+# Run diagnostics
+sudo /opt/cellular/cellular-debug.sh test
+
+# Check signal strength
+sudo /opt/cellular/cellular-debug.sh signal
+
+# Try troubleshooting script
+sudo /opt/cellular/connect-cellular-dynamic.sh
+```
+
+### Auto-Recovery Not Working
+
+```bash
+# Check daemon status
+ps aux | grep auto-recover.sh
+
+# View logs
+tail -f /var/log/cellular/auto-recover.log
+
+# Restart daemon
+sudo pkill -f auto-recover.sh
+export CELLULAR_LOG_DIR=/var/log/cellular
+sudo -E nohup /opt/cellular/auto-recover.sh 30 &
+```
+
+## Documentation
+
+- **[CELLULAR_SETUP_GUIDE.md](CELLULAR_SETUP_GUIDE.md)** - Detailed setup and configuration
+- **[CELLULAR_TROUBLESHOOTING.md](CELLULAR_TROUBLESHOOTING.md)** - Common issues and solutions
+- **[CELLULAR_SCRIPTS_README.md](CELLULAR_SCRIPTS_README.md)** - Individual script documentation
+- **[MODEM_ID_GUIDE.md](MODEM_ID_GUIDE.md)** - Modem ID auto-detection
+- **[DYNAMIC_PATHS_REFACTORING.md](DYNAMIC_PATHS_REFACTORING.md)** - Path configuration guide
+
+## Common Commands
+
+```bash
+# Quick status check
+sudo /opt/cellular/cellular-debug.sh status
+
+# Full diagnostics
+sudo /opt/cellular/cellular-debug.sh test
+
+# Check signal strength
+sudo /opt/cellular/cellular-debug.sh signal
+
+# View connection logs
+sudo /opt/cellular/cellular-debug.sh logs
+
+# Emergency modem reset
+sudo /opt/cellular/reset-modem.sh
+
+# Reconnect after reset
+sudo /opt/cellular/connect-cellular-robust.sh
+
+# Deploy to remote system
+./cellular-remote-deploy.sh pi@192.168.1.100
+```
+
+## Performance Characteristics
+
+- **Connection Time** - 5-15 seconds (depends on signal)
+- **Recovery Time** - 30-60 seconds (configurable)
+- **Daemon Overhead** - <1% CPU, minimal memory
+- **Log Size** - ~1MB per week (configurable)
+
+## Requirements
+
+### Hardware
+- Raspberry Pi 4 (2GB+ RAM recommended)
+- SIMCOM SIM7600G-H modem
+- USB cable
+- Active SIM card with data plan
+
+### Software
+- Raspberry Pi OS (Debian-based)
+- ModemManager and libmm-glib
+- systemd
+- Standard Linux utilities
+
+### Network
+- Active cellular data plan
+- Adequate signal strength (>-100 dBm)
+
+## Installation Verification
+
+After installation, verify everything works:
+
+```bash
+# 1. Check modem detection
+sudo /opt/cellular/cellular-debug.sh status
+
+# 2. Test connection
+sudo /opt/cellular/connect-cellular-robust.sh
+
+# 3. Verify connectivity
+ping -I wwan0 8.8.8.8
+
+# 4. Check auto-recovery
+ps aux | grep auto-recover.sh
+tail -f /var/log/cellular/auto-recover.log
+```
+
+## Support and Issues
+
+For detailed troubleshooting, see [CELLULAR_TROUBLESHOOTING.md](CELLULAR_TROUBLESHOOTING.md).
+
+Common issues:
+- **Modem not found** - Check USB connection and ModemManager status
+- **Connection fails** - Verify signal strength and SIM card
+- **Daemon crashes** - Check log directory permissions
+- **Routes not configured** - Ensure setup-dns-routes.sh is accessible
+
+## License
+
+[Add your license information here]
+
+## Contributing
+
+[Add contribution guidelines here]
+
+## Changelog
+
+### Version 1.0
+- Initial release
+- Dynamic path support
+- Auto-recovery daemon
+- Comprehensive diagnostics
+- Systemd integration

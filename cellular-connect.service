@@ -1,0 +1,14 @@
+[Unit]
+Description=Cellular Modem Connection
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/cellular/connect-cellular-robust.sh
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
