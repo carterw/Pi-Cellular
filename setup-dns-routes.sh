@@ -10,6 +10,15 @@
 
 set -e
 
+# Source configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/cellular-config.sh" ]]; then
+    source "$SCRIPT_DIR/cellular-config.sh"
+else
+    echo "Error: cellular-config.sh not found in $SCRIPT_DIR"
+    exit 1
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -154,10 +163,10 @@ fi
 sleep 1
 
 # Add default route with higher metric (lower priority) to prefer WiFi
-# WiFi typically uses metric 600, so cellular uses 700 to be secondary
-log_info "Adding default route via $GATEWAY with metric 700 (WiFi preferred)..."
-if ip route add default via $GATEWAY dev wwan0 metric 700 2>/dev/null; then
-    log_info "✓ Default route added: via $GATEWAY (metric 700)"
+# WiFi typically uses metric 600, so cellular uses higher metric to be secondary
+log_info "Adding default route via $GATEWAY with metric $CELLULAR_ROUTE_METRIC (WiFi preferred)..."
+if ip route add default via $GATEWAY dev wwan0 metric $CELLULAR_ROUTE_METRIC 2>/dev/null; then
+    log_info "✓ Default route added: via $GATEWAY (metric $CELLULAR_ROUTE_METRIC)"
 else
     log_error "Failed to add default route"
     log_error "Current routes:"
@@ -169,10 +178,10 @@ sleep 1
 
 # Verify route was added
 log_info "Verifying route configuration..."
-if ip route | grep -q "default.*wwan0.*metric 700"; then
-    log_info "✓ Default route verified on wwan0 with metric 700"
+if ip route | grep -q "default.*wwan0.*metric $CELLULAR_ROUTE_METRIC"; then
+    log_info "✓ Default route verified on wwan0 with metric $CELLULAR_ROUTE_METRIC"
 else
-    log_warn "Default route on wwan0 may not have metric 700, checking..."
+    log_warn "Default route on wwan0 may not have metric $CELLULAR_ROUTE_METRIC, checking..."
     if ip route | grep -q "default.*wwan0"; then
         log_info "✓ Default route exists on wwan0 (metric may vary)"
     else

@@ -10,6 +10,15 @@
 
 set -e
 
+# Source configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/cellular-config.sh" ]]; then
+    source "$SCRIPT_DIR/cellular-config.sh"
+else
+    echo "Error: cellular-config.sh not found in $SCRIPT_DIR"
+    exit 1
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -109,7 +118,7 @@ case $COMMAND in
         sleep 2
         
         log_info "Step 2: Creating bearer..."
-        mmcli -m 0 --create-bearer="apn=ereseller,ip-type=ipv4v6"
+        mmcli -m 0 --create-bearer="apn=$CELLULAR_APN,ip-type=$CELLULAR_IP_TYPE"
         sleep 2
         
         log_info "Step 3: Connecting bearer..."

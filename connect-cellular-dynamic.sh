@@ -11,6 +11,15 @@
 
 set -e  # Exit on error
 
+# Source configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/cellular-config.sh" ]]; then
+    source "$SCRIPT_DIR/cellular-config.sh"
+else
+    echo "Error: cellular-config.sh not found in $SCRIPT_DIR"
+    exit 1
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -29,11 +38,8 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Configuration
-APN="ereseller"
-IP_TYPE="ipv4v6"
-MTU=1430
-INTERFACE="wwan0"
+# Configuration (sourced from cellular-config.sh above)
+# CELLULAR_APN, CELLULAR_IP_TYPE, CELLULAR_MTU, CELLULAR_INTERFACE are already set
 TIMEOUT=30  # seconds to wait for connection
 DEFAULT_DNS="8.8.8.8"  # Fallback only if modem doesn't provide DNS
 
@@ -67,8 +73,8 @@ fi
 sleep 2
 
 # Step 2: Create bearer with APN
-log_info "Step 2: Creating bearer with APN=$APN, IP-Type=$IP_TYPE..."
-BEARER_OUTPUT=$(mmcli -m $MODEM_ID --create-bearer="apn=$APN,ip-type=$IP_TYPE" 2>&1)
+log_info "Step 2: Creating bearer with APN=$CELLULAR_APN, IP-Type=$CELLULAR_IP_TYPE..."
+BEARER_OUTPUT=$(mmcli -m $MODEM_ID --create-bearer="apn=$CELLULAR_APN,ip-type=$CELLULAR_IP_TYPE" 2>&1)
 if [[ $? -eq 0 ]]; then
     # Extract bearer ID from output like "/org/freedesktop/ModemManager1/Bearer/3"
     BEARER_ID=$(echo "$BEARER_OUTPUT" | grep -oP 'Bearer/\K[0-9]+' | head -1)
@@ -98,8 +104,8 @@ fi
 sleep 2
 
 # Step 4: Bring up the interface
-log_info "Step 4: Bringing up interface $INTERFACE..."
-if ip link set $INTERFACE up; then
+log_info "Step 4: Bringing up interface $CELLULAR_INTERFACE..."
+if ip link set $CELLULAR_INTERFACE up; then
     log_info "Interface brought up"
 else
     log_error "Failed to bring up interface"

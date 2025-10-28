@@ -2,13 +2,14 @@
 
 ## Overview
 
-Five scripts work together to manage and debug your SIMCOM SIM7600G-H cellular modem on Raspberry Pi:
+Six components work together to manage and debug your SIMCOM SIM7600G-H cellular modem on Raspberry Pi:
 
-1. **connect-cellular-robust.sh** - Production connection script with modem state management (runs on Pi)
-2. **connect-cellular-dynamic.sh** - Alternative connection script with manual IP configuration (runs on Pi)
-3. **auto-recover.sh** - Continuous monitoring daemon for connection stability (runs on Pi)
-4. **setup-dns-routes.sh** - DNS and route configuration helper (runs on Pi)
-5. **cellular-debug.sh** - Debugging and diagnostics (runs on Pi)
+1. **cellular-config.sh** - Centralized configuration file (edit this to change carriers)
+2. **connect-cellular-robust.sh** - Production connection script with modem state management (runs on Pi)
+3. **connect-cellular-dynamic.sh** - Alternative connection script with manual IP configuration (runs on Pi)
+4. **auto-recover.sh** - Continuous monitoring daemon for connection stability (runs on Pi)
+5. **setup-dns-routes.sh** - DNS and route configuration helper (runs on Pi)
+6. **cellular-debug.sh** - Debugging and diagnostics (runs on Pi)
 
 ---
 
@@ -60,6 +61,47 @@ sudo -E nohup /opt/cellular/auto-recover.sh 30 &
 ```bash
 sudo /opt/cellular/cellular-debug.sh test
 ```
+
+---
+
+## Configuration
+
+### cellular-config.sh - Centralized Configuration
+
+All carrier-specific settings are in `cellular-config.sh`. This file is sourced by all scripts, making the system carrier-agnostic.
+
+**Key variables:**
+
+```bash
+# Carrier APN (change this for your carrier)
+CELLULAR_APN="ereseller"
+
+# IP type
+CELLULAR_IP_TYPE="ipv4v6"
+
+# Interface name
+CELLULAR_INTERFACE="wwan0"
+
+# Route metric (higher = lower priority, allows WiFi preference)
+CELLULAR_ROUTE_METRIC="700"
+
+# MTU size
+CELLULAR_MTU="1430"
+```
+
+**To change carriers:**
+
+1. Edit `cellular-config.sh`
+2. Update `CELLULAR_APN` to your carrier's APN
+3. All scripts automatically use the new value
+
+**Common APNs:**
+
+- `ereseller` - Current configuration
+- `verizon` - Verizon
+- `iot.1nce.net` - 1NCE
+- `m2m.vodafone.com` - Vodafone
+- `lte-m.vodafone.de` - Vodafone LTE-M
 
 ---
 
@@ -129,6 +171,8 @@ DNS: 172.26.38.2
 MTU: 1430
 ==========================================
 ```
+
+**Note**: The APN and IP-Type are read from `cellular-config.sh`. To use a different carrier, edit that file.
 
 **Troubleshooting**:
 
@@ -569,6 +613,7 @@ After deployment, scripts are located at:
 
 ```
 /opt/cellular/
+├── cellular-config.sh               # Configuration file (EDIT THIS for carrier changes)
 ├── connect-cellular-robust.sh       # Production connection script (recommended)
 ├── connect-cellular-dynamic.sh      # Alternative connection script
 ├── auto-recover.sh                  # Continuous monitoring daemon

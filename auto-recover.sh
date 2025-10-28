@@ -18,6 +18,15 @@
 # To stop daemon:
 # sudo pkill -f auto-recover.sh
 
+# Source configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/cellular-config.sh" ]]; then
+    source "$SCRIPT_DIR/cellular-config.sh"
+else
+    echo "Error: cellular-config.sh not found in $SCRIPT_DIR"
+    exit 1
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -152,7 +161,7 @@ recreate_bearer() {
     fi
     
     # Create new bearer
-    BEARER_OUTPUT=$(mmcli -m $MODEM_ID --create-bearer="apn=ereseller,ip-type=ipv4v6" 2>&1)
+    BEARER_OUTPUT=$(mmcli -m $MODEM_ID --create-bearer="apn=$CELLULAR_APN,ip-type=$CELLULAR_IP_TYPE" 2>&1)
     if [[ $? -eq 0 ]]; then
         NEW_BEARER_ID=$(echo "$BEARER_OUTPUT" | grep -oP 'Bearer/\K[0-9]+' | head -1)
         if [[ -n "$NEW_BEARER_ID" ]]; then

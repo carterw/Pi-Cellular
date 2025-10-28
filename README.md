@@ -130,6 +130,9 @@ pi-cellular/
 ├── CELLULAR_SCRIPTS_README.md        # Script documentation
 ├── MODEM_ID_GUIDE.md                 # Modem ID auto-detection
 │
+├── Configuration
+├── cellular-config.sh                # Carrier and system configuration (EDIT THIS)
+│
 ├── Systemd Services
 ├── cellular-connect.service          # Boot-time connection service
 ├── cellular-auto-recover.service     # Auto-recovery daemon service
@@ -169,6 +172,43 @@ pi-cellular/
 | `cellular-remote-deploy.sh` | Deploy to remote system |
 
 ## Configuration
+
+### Carrier Configuration (cellular-config.sh)
+
+All carrier-specific settings are centralized in `cellular-config.sh`. This makes the system carrier-agnostic and eliminates hardcoded values.
+
+**Key configuration variables:**
+
+```bash
+# Access Point Name (APN) - Change this for your carrier
+CELLULAR_APN="ereseller"
+
+# IP Type (ipv4, ipv6, or ipv4v6)
+CELLULAR_IP_TYPE="ipv4v6"
+
+# Cellular interface name
+CELLULAR_INTERFACE="wwan0"
+
+# Route metric (higher = lower priority, allows WiFi preference)
+CELLULAR_ROUTE_METRIC="700"
+
+# MTU size for cellular
+CELLULAR_MTU="1430"
+```
+
+**To change carriers:**
+
+1. Edit `cellular-config.sh`
+2. Update `CELLULAR_APN` to your carrier's APN
+3. All scripts automatically use the new value
+
+**Common APNs:**
+
+- `ereseller` - Current configuration
+- `verizon` - Verizon
+- `iot.1nce.net` - 1NCE
+- `m2m.vodafone.com` - Vodafone
+- `lte-m.vodafone.de` - Vodafone LTE-M
 
 ### Environment Variables
 
