@@ -153,10 +153,11 @@ fi
 
 sleep 1
 
-# Add default route
-log_info "Adding default route via $GATEWAY..."
-if ip route add default via $GATEWAY dev wwan0 2>/dev/null; then
-    log_info "✓ Default route added: via $GATEWAY"
+# Add default route with higher metric (lower priority) to prefer WiFi
+# WiFi typically uses metric 600, so cellular uses 700 to be secondary
+log_info "Adding default route via $GATEWAY with metric 700 (WiFi preferred)..."
+if ip route add default via $GATEWAY dev wwan0 metric 700 2>/dev/null; then
+    log_info "✓ Default route added: via $GATEWAY (metric 700)"
 else
     log_error "Failed to add default route"
     log_error "Current routes:"
@@ -168,13 +169,18 @@ sleep 1
 
 # Verify route was added
 log_info "Verifying route configuration..."
-if ip route | grep -q "default.*wwan0"; then
-    log_info "✓ Default route verified on wwan0"
+if ip route | grep -q "default.*wwan0.*metric 700"; then
+    log_info "✓ Default route verified on wwan0 with metric 700"
 else
-    log_error "Default route not found on wwan0"
-    log_error "Current routes:"
-    ip route show || true
-    exit 1
+    log_warn "Default route on wwan0 may not have metric 700, checking..."
+    if ip route | grep -q "default.*wwan0"; then
+        log_info "✓ Default route exists on wwan0 (metric may vary)"
+    else
+        log_error "Default route not found on wwan0"
+        log_error "Current routes:"
+        ip route show || true
+        exit 1
+    fi
 fi
 
 # Step 4: Configure DNS
