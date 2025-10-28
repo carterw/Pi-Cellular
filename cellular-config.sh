@@ -66,5 +66,3 @@ DNS_TIMEOUT="3"
 
 # Maximum attempts for bearer reconnection
 MAX_RECONNECT_ATTEMPTS="3"
-
-exit 0
