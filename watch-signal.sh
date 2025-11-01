@@ -4,7 +4,7 @@
 # Automatically detect the modem number
 
 # Detect modem number
-MODEM_NUMBER=$(mmcli -L | grep -oP '(?<=Modem )(\d+)' | head -1)
+MODEM_NUMBER=$(mmcli -L 2>/dev/null | grep -oP 'Modem/\K[0-9]+' | head -1)
 
 if [ -z "$MODEM_NUMBER" ]; then
     echo "Error: No modem found. Ensure ModemManager is running and a modem is connected."
