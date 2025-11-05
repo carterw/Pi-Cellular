@@ -46,10 +46,15 @@ log_section "MODEM DETECTION FIX"
 
 # Step 1: Verify modem is on USB
 log_info "Step 1: Checking USB devices..."
-if lsusb | grep -i "1e0e:9001" &>/dev/null; then
-    log_info "✓ Modem found on USB: $(lsusb | grep -i 1e0e:9001)"
+# Support multiple modem types: SIM7600 (1e0e:9001), SIM7080 (1e0e:9205)
+if lsusb | grep -iE "1e0e:(9001|9205)" &>/dev/null; then
+    log_info "✓ Modem found on USB:"
+    lsusb | grep -iE "1e0e:(9001|9205)"
 else
     log_error "✗ Modem NOT found on USB"
+    log_error "Supported modems:"
+    log_error "  - SIM7600: 1e0e:9001"
+    log_error "  - SIM7080: 1e0e:9205"
     log_error "Check USB cable connection"
     exit 1
 fi

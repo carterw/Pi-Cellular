@@ -2,6 +2,78 @@
 
 ## Common Issues and Solutions
 
+### Issue 0: "No modems were found" (ModemManager Not Detecting Modem)
+
+**Symptoms**:
+
+```bash
+$ mmcli -L
+No modems were found
+
+$ lsusb
+Bus 003 Device 010: ID 1e0e:9205 Qualcomm / Option SimTech SIM7080
+```
+
+Modem appears in `lsusb` but ModemManager doesn't detect it.
+
+**Causes**:
+
+1. ModemManager doesn't recognize the modem USB ID
+2. ModemManager service not running or crashed
+3. Modem needs firmware initialization
+4. udev rules not loaded
+
+**Solutions**:
+
+#### For SIM7080 (1e0e:9205)
+
+The SIM7080 may require additional initialization. Try these steps:
+
+```bash
+# 1. Check if modem is on USB
+lsusb | grep -i "1e0e:9205"
+
+# 2. Check for serial devices
+ls -la /dev/ttyUSB*
+
+# 3. Restart ModemManager
+sudo systemctl restart ModemManager
+sleep 5
+
+# 4. Check again
+mmcli -L
+```
+
+If still not detected:
+
+```bash
+# 5. Check ModemManager logs
+sudo journalctl -u ModemManager -n 50
+
+# 6. Try manual USB reset
+sudo systemctl stop ModemManager
+sleep 2
+echo "1-1" | sudo tee /sys/bus/usb/drivers/usb/unbind
+sleep 3
+echo "1-1" | sudo tee /sys/bus/usb/drivers/usb/bind
+sleep 3
+sudo systemctl start ModemManager
+sleep 5
+mmcli -L
+```
+
+#### Automated Detection Fix
+
+Use the provided script:
+
+```bash
+sudo /opt/cellular/fix-modem-detection.sh
+```
+
+This script handles both SIM7600 and SIM7080 modems.
+
+---
+
 ### Issue 1: "couldn't find modem" Error
 
 **Symptoms**:

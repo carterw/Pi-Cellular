@@ -1,5 +1,10 @@
 # Modem ID Re-enumeration Guide
 
+## Supported Modems
+
+- **SIM7600G-H**: USB ID `1e0e:9001` (Qualcomm/Option)
+- **SIM7080**: USB ID `1e0e:9205` (Qualcomm/Option SimTech)
+
 ## Problem: Modem Changes from 0 to 1 (or vice versa)
 
 When ModemManager restarts or the USB connection resets, the modem may be re-enumerated with a different ID:
