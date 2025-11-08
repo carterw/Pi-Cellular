@@ -149,9 +149,9 @@ if [[ -z "$IPV4_ADDRESS" ]] || [[ -z "$IPV4_PREFIX" ]] || [[ -z "$GATEWAY" ]]; t
     exit 1
 fi
 
-# Use default DNS if modem didn't provide IPv4 DNS
-if [[ -z "$IPV4_DNS" ]]; then
-    log_warn "Modem did not provide IPv4 DNS server, using default: $DEFAULT_DNS"
+# Use default DNS if modem didn't provide IPv4 DNS or if it's a private IP
+if [[ -z "$IPV4_DNS" ]] || [[ $IPV4_DNS =~ ^(172\.(1[6-9]|2[0-9]|3[01])|10\.|192\.168\.) ]]; then
+    log_warn "Modem DNS invalid or private, using default: $DEFAULT_DNS"
     IPV4_DNS=$DEFAULT_DNS
 fi
 

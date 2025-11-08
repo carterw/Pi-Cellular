@@ -199,9 +199,10 @@ log_info "Step 4: Configuring DNS..."
 IPV4_DNS_RAW=$(echo "$MMCLI_OUTPUT" | grep -A 5 "IPv4 configuration" | grep "dns:" | head -1 | sed 's/.*dns:[[:space:]]*//')
 IPV4_DNS=$(echo "$IPV4_DNS_RAW" | awk -F',' '{print $1}' | xargs)
 
-if [[ -z "$IPV4_DNS" ]]; then
+# Validate DNS - check if it's a private IP (172.16-31.x.x, 10.x.x.x, 192.168.x.x)
+if [[ -z "$IPV4_DNS" ]] || [[ $IPV4_DNS =~ ^(172\.(1[6-9]|2[0-9]|3[01])|10\.|192\.168\.) ]]; then
     IPV4_DNS="8.8.8.8"
-    log_warn "Using default DNS: $IPV4_DNS"
+    log_warn "Modem DNS invalid or private, using fallback: $IPV4_DNS"
 else
     log_info "Using modem DNS: $IPV4_DNS"
 fi
