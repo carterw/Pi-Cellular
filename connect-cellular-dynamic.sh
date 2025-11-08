@@ -151,8 +151,17 @@ fi
 
 # Use default DNS if modem didn't provide IPv4 DNS or if it's a private IP
 if [[ -z "$IPV4_DNS" ]] || [[ $IPV4_DNS =~ ^(172\.(1[6-9]|2[0-9]|3[01])|10\.|192\.168\.) ]]; then
-    log_warn "Modem DNS invalid or private, using default: $DEFAULT_DNS"
+    log_warn "Modem IPv4 DNS invalid or private, using default: $DEFAULT_DNS"
     IPV4_DNS=$DEFAULT_DNS
+fi
+
+# Validate IPv6 DNS - check if it's a private ULA (fc00::/7) or link-local (fe80::/10)
+DEFAULT_IPV6_DNS="2001:4860:4860::8888"
+if [[ -z "$IPV6_DNS" ]] || [[ $IPV6_DNS =~ ^(fc|fd|fe80) ]]; then
+    if [[ -n "$IPV6_DNS" ]]; then
+        log_warn "Modem IPv6 DNS invalid or private, using default: $DEFAULT_IPV6_DNS"
+    fi
+    IPV6_DNS=$DEFAULT_IPV6_DNS
 fi
 
 log_info "Retrieved configuration:"
@@ -201,10 +210,7 @@ log_info "  Extracted IPv4 DNS: $IPV4_DNS"
 log_info "  Extracted IPv6 DNS: $IPV6_DNS"
 
 # Build resolv.conf with both IPv4 and IPv6 DNS servers
-DNS_CONFIG="nameserver $IPV4_DNS"
-if [[ -n "$IPV6_DNS" ]]; then
-    DNS_CONFIG="$DNS_CONFIG"$'\n'"nameserver $IPV6_DNS"
-fi
+DNS_CONFIG="nameserver $IPV4_DNS"$'\n'"nameserver $IPV6_DNS"
 
 # Check if NetworkManager is managing DNS
 if systemctl is-active --quiet NetworkManager; then

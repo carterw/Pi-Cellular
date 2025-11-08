@@ -202,10 +202,25 @@ IPV4_DNS=$(echo "$IPV4_DNS_RAW" | awk -F',' '{print $1}' | xargs)
 # Validate DNS - check if it's a private IP (172.16-31.x.x, 10.x.x.x, 192.168.x.x)
 if [[ -z "$IPV4_DNS" ]] || [[ $IPV4_DNS =~ ^(172\.(1[6-9]|2[0-9]|3[01])|10\.|192\.168\.) ]]; then
     IPV4_DNS="8.8.8.8"
-    log_warn "Modem DNS invalid or private, using fallback: $IPV4_DNS"
+    log_warn "Modem IPv4 DNS invalid or private, using fallback: $IPV4_DNS"
 else
-    log_info "Using modem DNS: $IPV4_DNS"
+    log_info "Using modem IPv4 DNS: $IPV4_DNS"
 fi
+
+# Extract IPv6 DNS servers
+IPV6_DNS_RAW=$(echo "$MMCLI_OUTPUT" | grep -A 10 "IPv6 configuration" | grep "dns:" | sed 's/.*dns:[[:space:]]*//')
+IPV6_DNS=$(echo "$IPV6_DNS_RAW" | awk -F',' '{print $1}' | xargs)
+
+# Validate IPv6 DNS - check if it's a private ULA (fc00::/7) or link-local (fe80::/10)
+if [[ -z "$IPV6_DNS" ]] || [[ $IPV6_DNS =~ ^(fc|fd|fe80) ]]; then
+    IPV6_DNS="2001:4860:4860::8888"
+    log_warn "Modem IPv6 DNS invalid or private, using fallback: $IPV6_DNS"
+else
+    log_info "Using modem IPv6 DNS: $IPV6_DNS"
+fi
+
+# Build DNS configuration
+DNS_CONFIG="nameserver $IPV4_DNS"$'\n'"nameserver $IPV6_DNS"
 
 # Check if systemd-resolved is running
 if systemctl is-active --quiet systemd-resolved; then
@@ -216,18 +231,18 @@ if systemctl is-active --quiet systemd-resolved; then
     sleep 1
     
     # Set DNS for wwan0
-    if resolvectl dns wwan0 $IPV4_DNS 2>/dev/null; then
-        log_info "✓ DNS configured via resolvectl: $IPV4_DNS"
+    if resolvectl dns wwan0 $IPV4_DNS $IPV6_DNS 2>/dev/null; then
+        log_info "✓ DNS configured via resolvectl: $IPV4_DNS, $IPV6_DNS"
     else
         log_warn "Failed to configure DNS via resolvectl, trying /etc/resolv.conf"
-        echo "nameserver $IPV4_DNS" > /etc/resolv.conf 2>/dev/null || log_warn "Failed to write /etc/resolv.conf"
+        echo -e "$DNS_CONFIG" > /etc/resolv.conf 2>/dev/null || log_warn "Failed to write /etc/resolv.conf"
     fi
 else
     log_info "systemd-resolved not running, configuring /etc/resolv.conf..."
     
     # Write DNS directly
-    if echo "nameserver $IPV4_DNS" > /etc/resolv.conf 2>/dev/null; then
-        log_info "✓ DNS configured: $IPV4_DNS"
+    if echo -e "$DNS_CONFIG" > /etc/resolv.conf 2>/dev/null; then
+        log_info "✓ DNS configured: $IPV4_DNS, $IPV6_DNS"
     else
         log_error "Failed to configure DNS"
         exit 1
