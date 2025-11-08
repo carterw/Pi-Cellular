@@ -199,17 +199,11 @@ log_info "Step 4: Configuring DNS..."
 IPV4_DNS_RAW=$(echo "$MMCLI_OUTPUT" | grep -A 5 "IPv4 configuration" | grep "dns:" | head -1 | sed 's/.*dns:[[:space:]]*//')
 IPV4_DNS=$(echo "$IPV4_DNS_RAW" | awk -F',' '{print $1}' | xargs)
 
-# Fallback DNS servers (Google and Cloudflare)
-FALLBACK_DNS="8.8.8.8 1.1.1.1"
-
 if [[ -z "$IPV4_DNS" ]]; then
     IPV4_DNS="8.8.8.8"
-    log_warn "No modem DNS found, using Google DNS: $IPV4_DNS"
-    DNS_SERVERS="$IPV4_DNS 1.1.1.1"
+    log_warn "Using default DNS: $IPV4_DNS"
 else
-    log_info "Using modem DNS: $IPV4_DNS with fallback servers"
-    # Use carrier DNS first, then fallback to public DNS
-    DNS_SERVERS="$IPV4_DNS 8.8.8.8 1.1.1.1"
+    log_info "Using modem DNS: $IPV4_DNS"
 fi
 
 # Check if systemd-resolved is running
@@ -220,30 +214,19 @@ if systemctl is-active --quiet systemd-resolved; then
     resolvectl dns wwan0 "" 2>/dev/null || true
     sleep 1
     
-    # Set DNS for wwan0 with fallback servers
-    if resolvectl dns wwan0 $DNS_SERVERS 2>/dev/null; then
-        log_info "✓ DNS configured via resolvectl: $DNS_SERVERS"
+    # Set DNS for wwan0
+    if resolvectl dns wwan0 $IPV4_DNS 2>/dev/null; then
+        log_info "✓ DNS configured via resolvectl: $IPV4_DNS"
     else
         log_warn "Failed to configure DNS via resolvectl, trying /etc/resolv.conf"
-        {
-            for dns in $DNS_SERVERS; do
-                echo "nameserver $dns"
-            done
-        } > /etc/resolv.conf 2>/dev/null || log_warn "Failed to write /etc/resolv.conf"
+        echo "nameserver $IPV4_DNS" > /etc/resolv.conf 2>/dev/null || log_warn "Failed to write /etc/resolv.conf"
     fi
 else
     log_info "systemd-resolved not running, configuring /etc/resolv.conf..."
     
-    # Write DNS directly with fallback servers
-    if {
-        for dns in $DNS_SERVERS; do
-            echo "nameserver $dns"
-        done
-    } > /etc/resolv.conf 2>/dev/null; then
-        log_info "✓ DNS configured with fallback servers:"
-        for dns in $DNS_SERVERS; do
-            log_info "  - $dns"
-        done
+    # Write DNS directly
+    if echo "nameserver $IPV4_DNS" > /etc/resolv.conf 2>/dev/null; then
+        log_info "✓ DNS configured: $IPV4_DNS"
     else
         log_error "Failed to configure DNS"
         exit 1

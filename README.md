@@ -147,7 +147,6 @@ pi-cellular/
 ├── cellular-recover.sh               # Emergency recovery script
 ├── reset-modem.sh                    # Modem reset utility
 ├── setup-dns-routes.sh               # Network configuration
-├── fix-dns.sh                        # DNS resolution fix tool
 └── get-modem-id.sh                   # Modem ID detection utility
 ```
 
@@ -169,7 +168,6 @@ pi-cellular/
 | `cellular-recover.sh` | Emergency recovery |
 | `reset-modem.sh` | Full modem reset |
 | `setup-dns-routes.sh` | Network configuration |
-| `fix-dns.sh` | Fix DNS resolution issues |
 | `get-modem-id.sh` | Detect current modem ID |
 | `cellular-remote-deploy.sh` | Deploy to remote system |
 
@@ -368,7 +366,6 @@ sudo -E nohup /opt/cellular/auto-recover.sh 30 &
 - **[CELLULAR_TROUBLESHOOTING.md](CELLULAR_TROUBLESHOOTING.md)** - Common issues and solutions
 - **[CELLULAR_SCRIPTS_README.md](CELLULAR_SCRIPTS_README.md)** - Individual script documentation
 - **[MODEM_ID_GUIDE.md](MODEM_ID_GUIDE.md)** - Modem ID auto-detection
-- **[DNS_FIX_README.md](DNS_FIX_README.md)** - DNS resolution fix guide
 
 ## Common Commands
 
@@ -387,9 +384,6 @@ sudo /opt/cellular/cellular-debug.sh logs
 
 # Emergency modem reset
 sudo /opt/cellular/reset-modem.sh
-
-# Fix DNS resolution issues
-sudo /opt/cellular/fix-dns.sh
 
 # Reconnect after reset
 sudo /opt/cellular/connect-cellular-robust.sh
@@ -453,7 +447,6 @@ Common issues:
 
 - **Modem not found** - Check USB connection and ModemManager status
 - **Connection fails** - Verify signal strength and SIM card
-- **DNS resolution fails** - Run `sudo /opt/cellular/fix-dns.sh` to add fallback DNS servers
 - **Daemon crashes** - Check log directory permissions
 - **Routes not configured** - Ensure setup-dns-routes.sh is accessible
 
