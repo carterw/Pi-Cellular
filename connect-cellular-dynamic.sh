@@ -200,11 +200,17 @@ log_info "Step 8: Configuring DNS..."
 log_info "  Extracted IPv4 DNS: $IPV4_DNS"
 log_info "  Extracted IPv6 DNS: $IPV6_DNS"
 
-# Build resolv.conf with both IPv4 and IPv6 DNS servers
+# Build resolv.conf with carrier DNS first, then fallback to public DNS
+# This ensures DNS resolution works even if carrier DNS fails for some domains
 DNS_CONFIG="nameserver $IPV4_DNS"
 if [[ -n "$IPV6_DNS" ]]; then
     DNS_CONFIG="$DNS_CONFIG"$'\n'"nameserver $IPV6_DNS"
 fi
+# Add fallback DNS servers (Google and Cloudflare)
+DNS_CONFIG="$DNS_CONFIG"$'\n'"nameserver 8.8.8.8"
+DNS_CONFIG="$DNS_CONFIG"$'\n'"nameserver 1.1.1.1"
+
+log_info "  Adding fallback DNS: 8.8.8.8, 1.1.1.1"
 
 # Check if NetworkManager is managing DNS
 if systemctl is-active --quiet NetworkManager; then
@@ -220,22 +226,24 @@ fi
 # Write DNS to /etc/resolv.conf (script already runs as root via sudo)
 # Note: We don't make it immutable to allow WiFi DNS to work when cellular is not active
 if echo -e "$DNS_CONFIG" > /etc/resolv.conf 2>/dev/null; then
-    log_info "DNS configured:"
-    log_info "  IPv4: $IPV4_DNS"
+    log_info "DNS configured with fallback servers:"
+    log_info "  Primary IPv4: $IPV4_DNS (carrier)"
     if [[ -n "$IPV6_DNS" ]]; then
-        log_info "  IPv6: $IPV6_DNS"
+        log_info "  Primary IPv6: $IPV6_DNS (carrier)"
     fi
+    log_info "  Fallback: 8.8.8.8 (Google), 1.1.1.1 (Cloudflare)"
 else
     # If direct write fails, try with explicit permissions
     if cat > /etc/resolv.conf << EOF 2>/dev/null
 $DNS_CONFIG
 EOF
     then
-        log_info "DNS configured:"
-        log_info "  IPv4: $IPV4_DNS"
+        log_info "DNS configured with fallback servers:"
+        log_info "  Primary IPv4: $IPV4_DNS (carrier)"
         if [[ -n "$IPV6_DNS" ]]; then
-            log_info "  IPv6: $IPV6_DNS"
+            log_info "  Primary IPv6: $IPV6_DNS (carrier)"
         fi
+        log_info "  Fallback: 8.8.8.8 (Google), 1.1.1.1 (Cloudflare)"
     else
         log_warn "Failed to configure DNS (file may be managed by systemd-resolved or NetworkManager)"
         log_info "DNS may be managed by NetworkManager"

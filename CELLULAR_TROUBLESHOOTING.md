@@ -233,13 +233,52 @@ $ ping -I wwan0 8.8.8.8
 # Works fine
 ```
 
+Or carrier DNS resolves some domains but not others:
+
+```bash
+$ cat /etc/resolv.conf
+nameserver 172.26.38.2
+
+$ nslookup google.com
+# Works
+
+$ nslookup github.com
+# Fails or times out
+```
+
 **Causes**:
 
 1. DNS not configured in `/etc/resolv.conf`
-2. IPv6 DNS missing (if using IPv6)
-3. DNS servers unreachable
+2. Carrier DNS server (e.g., 172.26.38.2) doesn't resolve all domains
+3. IPv6 DNS missing (if using IPv6)
+4. DNS servers unreachable or overloaded
 
 **Solutions**:
+
+#### Automated Fix (Recommended)
+
+Use the DNS fix script to automatically add fallback DNS servers:
+
+```bash
+sudo /opt/cellular/fix-dns.sh
+```
+
+This script will:
+
+- Detect carrier DNS from the modem
+- Add Google DNS (8.8.8.8) and Cloudflare DNS (1.1.1.1) as fallbacks
+- Test DNS resolution with multiple domains
+- Configure both systemd-resolved and /etc/resolv.conf
+
+After running, your `/etc/resolv.conf` will contain:
+
+```text
+nameserver 172.26.38.2    # Carrier DNS (tried first)
+nameserver 8.8.8.8        # Google DNS (fallback)
+nameserver 1.1.1.1        # Cloudflare DNS (fallback)
+```
+
+#### Manual Fix
 
 **Check DNS configuration**:
 
@@ -249,23 +288,37 @@ cat /etc/resolv.conf
 
 Should show something like:
 
-```
+```text
 nameserver 172.26.38.2
 nameserver fc00:a:a::400
 ```
 
-**Reconfigure DNS**:
+**Add fallback DNS servers manually**:
 
 ```bash
 # Get DNS from modem
 sudo mmcli -b 1 | grep dns
 
-# Manually set DNS to the address that was shown, like;
-echo "nameserver 172.26.38.2" | sudo tee /etc/resolv.conf
-echo "nameserver fc00:a:a::400" | sudo tee -a /etc/resolv.conf
+# Add carrier DNS plus fallback servers
+sudo tee /etc/resolv.conf > /dev/null <<EOF
+nameserver 172.26.38.2
+nameserver 8.8.8.8
+nameserver 1.1.1.1
+EOF
 
 # Test
 nslookup google.com
+nslookup github.com
+```
+
+**Reconnect with updated scripts**:
+
+The connection scripts have been updated to automatically add fallback DNS:
+
+```bash
+sudo /opt/cellular/connect-cellular-robust.sh
+# or
+sudo /opt/cellular/connect-cellular-dynamic.sh
 ```
 
 **Check if systemd-resolved is interfering**:
