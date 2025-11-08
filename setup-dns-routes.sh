@@ -148,16 +148,22 @@ fi
 
 sleep 1
 
-# Remove any existing IPv4 default routes first (to avoid conflicts)
-log_info "Removing conflicting IPv4 default routes..."
+# Check if WiFi default route exists and preserve it
+WIFI_DEFAULT_ROUTE=$(ip route show | grep "^default.*dev wlan0" || true)
+if [[ -n "$WIFI_DEFAULT_ROUTE" ]]; then
+    log_info "WiFi default route found, will preserve it"
+fi
+
+# Remove any existing cellular default routes (to avoid conflicts)
+log_info "Removing conflicting cellular default routes..."
 REMOVED_COUNT=0
-while ip route del default 2>/dev/null; do
+while ip route del default dev wwan0 2>/dev/null; do
     REMOVED_COUNT=$((REMOVED_COUNT + 1))
-    log_info "Removed default route #$REMOVED_COUNT"
+    log_info "Removed cellular default route #$REMOVED_COUNT"
 done
 
 if [[ $REMOVED_COUNT -eq 0 ]]; then
-    log_info "No conflicting default routes found"
+    log_info "No conflicting cellular default routes found"
 fi
 
 sleep 1
